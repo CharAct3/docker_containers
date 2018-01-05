@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+
+  cassandra:
+    build: ./cassandra
+    environment:
+      - AUTHENTICATOR=PasswordAuthenticator
+    ports:
+      - "7000:7000"
+      - "9042:9042"
+
+  kong:
+    image: kong:0.11
+    environment:
+      - KONG_DATABASE=cassandra
+      - KONG_CASSANDRA_CONTACT_POINTS=cassandra
+      - KONG_CASSANDRA_USERNAME=kong
+      - KONG_CASSANDRA_PASSWORD=kong
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_DB_UPDATE_PROPAGATION=5
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8443:8443"
+      - "8444:8444"
+
+  kong_dashboard:
+    image: pgbi/kong-dashboard:v2
+    ports:
+      - "8080:8080"
+
+  konga:
+    image: pantsel/konga
+    links:
+      - kong:kong
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "1337:1337"
